@@ -149,10 +149,12 @@
           </select>
         </div>
       </div>
-      <div class="btn-row"><button class="btn" style="background:var(--plan);" id="matchPlanBtn">生成方案对比</button></div>
+      <div class="btn-row"><button class="btn" style="background:var(--plan);" id="matchPlanBtn">生成 AI 个性化建议</button></div>
     </div>
 
     <div class="grid cols-3" id="planCards"></div>
+
+    <div id="aiAdviceResult" style="display:none;"></div>
 
     <div class="caution">
       <div>⚠️</div>
@@ -212,7 +214,7 @@
 <script src="js/matrix.js"></script>
 <!-- 模块五：学习能力画像 -->
 <script src="js/ability.js"></script>
-<!-- AI 接入层：预留位置，见 js/ai.js 说明 -->
+<!-- AI 接入层：调用 /api/course-advice 生成个性化选课建议 -->
 <script src="js/ai.js"></script>
 <!-- 页面初始化，必须放在所有模块脚本之后 -->
 <script src="js/main.js"></script>

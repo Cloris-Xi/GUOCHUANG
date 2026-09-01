@@ -10,21 +10,49 @@
 │   ├── tabs.js            顶部 Tab 切换逻辑
 │   ├── profile.js         模块一：绩点档案（表单、课程卡片渲染、hero 数据同步）
 │   ├── simulator.js       模块二：成绩模拟器（滑块、实时计算）
-│   ├── plan.js            模块三：选课方案卡片
+│   ├── plan.js            模块三：选课方案（AI 生成个性化建议）
 │   ├── matrix.js          模块四：优先级矩阵
 │   ├── ability.js         模块五：学习能力画像
-│   ├── ai.js              AI 接入层占位，见下方说明
+│   ├── ai.js              浏览器端调用 /api/course-advice 的封装
 │   └── main.js            页面初始化入口，必须最后加载
+├── api/
+│   └── course-advice.js  Vercel Serverless Function：调用 Claude 生成建议，Redis 做缓存
+├── package.json
 ├── .gitignore
 └── README.md
 ```
 
-## 用 GitHub Pages 直接预览
+## 用 GitHub Pages 直接预览（不含 AI 功能）
 
 仓库根目录就是 `index.html`，推到 GitHub 后打开
 `仓库 Settings → Pages → Source`，选 `Deploy from a branch`，
 分支选 `main`，目录选 `/ (root)`，保存后几分钟内就能通过
-`https://<你的用户名>.github.io/<仓库名>/` 访问，不需要任何构建步骤。
+`https://<你的用户名>.github.io/<仓库名>/` 访问。
+
+**注意**：GitHub Pages 只能托管静态文件，不能跑 `api/` 目录里的
+Serverless Function，所以在 GitHub Pages 上"生成 AI 个性化建议"这个
+按钮会请求失败。AI 功能需要部署到 Vercel（见下面）。
+
+## 部署到 Vercel（AI 功能需要这个）
+
+1. 项目已经关联到 Vercel，Environment Variables 里需要有下面几个：
+
+   | Key | 说明 |
+   |---|---|
+   | `UPSTASH_REDIS_REST_URL` | 已配置，用于缓存 AI 结果 |
+   | `UPSTASH_REDIS_REST_TOKEN` | 已配置 |
+   | `ANTHROPIC_API_KEY` | **还没配置，需要你自己去 [Anthropic Console](https://console.anthropic.com/settings/keys) 申请后添加** |
+   | `ANTHROPIC_MODEL` | 可选，不填默认用 `claude-sonnet-5` |
+
+   添加 `ANTHROPIC_API_KEY` 的位置：Vercel 项目 → Settings →
+   Environment Variables → Add New，Key 填 `ANTHROPIC_API_KEY`，
+   Value 填你的密钥，Environment 选 Production（如果本地也要测，
+   Preview / Development 也勾上）。加完之后需要重新 Deploy 一次
+   才会生效。
+
+2. `api/course-advice.js` 是标准的 Vercel Node.js Serverless
+   Function，`Application Preset` 保持你截图里的 `Other` 就行，
+   Vercel 会自动识别 `api/` 目录下的文件。
 
 ## 加载顺序
 
@@ -34,32 +62,36 @@
 
 原因：后面的文件里的函数会用到前面文件定义的全局变量（如 `courses`、`simAssumed`）
 和函数（如 `scoreToGpa`），本项目没有用打包工具，靠加载顺序保证依赖关系。
+`ai.js` 排在 `plan.js` 后面也没关系，因为 `plan.js` 只在按钮点击时才
+调用 `getAIAdvice()`，那时所有脚本早已加载完毕。
 
-## 关于接入 AI
+## AI 是怎么接入的
 
-`js/ai.js` 是预留的接入层，对应需求文档"7. Vibe Coding 的合理落点"里的思路：
+对应需求文档"7. Vibe Coding 的合理落点"的思路：
 
-- **规则引擎（确定性计算）** 留在 `profile.js` / `simulator.js` / `matrix.js` 里，
-  绩点换算、加权总评、目标反推、优先级排序都不应该交给大模型直接输出结果。
-- **AI 只做"理解 + 生成 + 解释"**：解析自然语言评分规则、把计算结果转成
-  通俗建议、生成能力画像的解释文字。AI 输出的结构化数据要经过学生确认，
-  再交给规则引擎运算。
-
-`ai.js` 里已经写好两个函数签名和调用位置说明：
-
-- `parseGradingRuleWithAI(rawText)` —— 解析教师给的评分规则文字
-- `explainResultWithAI(result)` —— 把模拟器算出的数字转成建议文案
-
-目前这两个函数返回的是本地 mock 数据，方便先跑通交互。真正接入时：
-
-1. 自己起一个后端接口（例如 `/api/ai/parse-grading-rule`），在后端调用
-   Anthropic API 并注入密钥 —— **不要把 API Key 放进前端代码**。
-2. 把 `ai.js` 里注释掉的 `fetch` 调用取消注释，指向你的后端地址。
-3. 在 `profile.js` 里加一个文本框和按钮，调用 `parseGradingRuleWithAI()`，
-   把返回的 `[{name, weight}]` 传给已有的 `addItemRow()` 函数即可。
+- **规则引擎（确定性计算）** 留在 `profile.js` / `simulator.js` / `matrix.js`
+  里 —— 绩点换算、加权总评、目标反推、优先级排序，这些都不交给模型直接
+  输出结果。
+- **AI 负责"选课方案"这个更偏策略判断的部分**：`plan.js` 里点击
+  "生成 AI 个性化建议"后，会把当前录入的课程、评分构成、目标绩点、
+  每周可用时间打包发给 `/api/course-advice`。
+- `api/course-advice.js` 在服务器端调用 Claude（`x-api-key` 只存在于
+  服务器环境变量里，浏览器代码永远拿不到），要求模型只输出结构化 JSON
+  （`summary` / `options` / `risks`），并且明确要求模型不要编造具体分数、
+  数据不足时要说明而不是硬给结论。
+- 相同的课程数据 + 目标短时间内重复请求时，会先查 Upstash Redis 缓存
+  （1 小时过期），命中就直接返回，不重复调用模型。
 
 ## 本地预览
 
-直接双击打开 `index.html` 即可（不依赖构建工具）。如果以后要接后端接口，
-建议起一个本地静态服务器（如 `npx serve gpa-planner`），避免部分浏览器
-对 `fetch` 请求的本地文件限制。
+因为现在有真正的后端接口了，双击打开 `index.html` 没法测试 AI 功能
+（浏览器直接打开本地文件时 `/api/course-advice` 请求不到）。本地调试
+建议装 [Vercel CLI](https://vercel.com/docs/cli)，在项目目录跑：
+
+```
+vercel dev
+```
+
+它会本地起一个开发服务器，同时把 `api/` 目录识别成 Serverless
+Function，环境变量会读取你在 Vercel 项目里配置的那一份（首次运行会
+提示你登录并关联项目）。
