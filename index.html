@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学业罗盘 · 个性化学业决策与绩点模拟</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <h1 class="display">看清每一分投入，能换来多少绩点。</h1>
+      <p>学业罗盘把选课冲突、评分规则和剩余任务折算成确定性的数字，让你在期末前就知道"目标还差多少、这周该先做哪门课"。</p>
+      <div class="hero-tags">
+        <span class="tag">规则引擎计算，不靠大模型猜分</span>
+        <span class="tag">支持自定义绩点换算</span>
+        <span class="tag">展示区间，不包装成定论</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="num" id="heroGpa">--</div>
+      <div class="lbl">当前预估学期绩点（含未完成项估算）</div>
+      <div class="row"><span>已录入课程</span><b id="heroCourses">0 门</b></div>
+      <div class="row"><span>距目标绩点</span><b id="heroGap">未设置目标</b></div>
+      <div class="row"><span>本周建议优先课程</span><b id="heroFocus">--</b></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="profile" style="border-color:var(--profile); color:var(--profile);"><span class="dot" style="background:var(--profile)"></span>绩点档案</button>
+    <button class="tab" data-tab="sim" style="border-color:var(--sim); color:var(--sim);"><span class="dot" style="background:var(--sim)"></span>成绩模拟器</button>
+    <button class="tab" data-tab="plan" style="border-color:var(--plan); color:var(--plan);"><span class="dot" style="background:var(--plan)"></span>选课方案</button>
+    <button class="tab" data-tab="matrix" style="border-color:var(--matrix); color:var(--matrix);"><span class="dot" style="background:var(--matrix)"></span>优先级矩阵</button>
+    <button class="tab" data-tab="ability" style="border-color:var(--ability); color:var(--ability);"><span class="dot" style="background:var(--ability)"></span>学习能力画像</button>
+  </div>
+
+  <!-- MODULE 1: PROFILE -->
+  <section class="panel active" id="panel-profile">
+    <div class="section-head">
+      <h2>绩点基础档案</h2>
+      <span class="kicker" style="background:var(--profile-soft); color:var(--profile);">01</span>
+    </div>
+    <p class="section-note">录入本学期课程与评分规则。不同学校、不同老师的评分细则都可能不同，请按实际情况填写每一项的权重。</p>
+
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="field">
+          <label>绩点换算制式</label>
+          <select id="gpaScale">
+            <option value="4.0">4.0 制（常见）</option>
+            <option value="4.3">4.3 制</option>
+            <option value="5.0">5.0 制</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>本学期目标绩点</label>
+          <input type="number" id="targetGpa" placeholder="例如 3.7" step="0.1" min="0" max="5">
+        </div>
+        <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-4px;">换算规则因校而异，此处采用常见对照表；后续可接入学校自定义规则模板。</p>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <label>课程名称</label>
+          <input type="text" id="cName" placeholder="例如 数据结构">
+        </div>
+        <div class="grid cols-2">
+          <div class="field">
+            <label>学分</label>
+            <input type="number" id="cCredit" placeholder="例如 3" min="0" step="0.5">
+          </div>
+          <div class="field">
+            <label>课程目标总评（可选）</label>
+            <input type="number" id="cTarget" placeholder="例如 85" min="0" max="100">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <label style="margin-bottom:10px;">评分构成（权重需合计 100%，已知成绩可先填，未知的留空）</label>
+      <div id="itemRows"></div>
+      <div class="btn-row">
+        <button class="btn ghost" id="addItemBtn">+ 添加评分项</button>
+      </div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn" style="background:var(--profile);" id="addCourseBtn">保存课程</button>
+        <button class="btn ghost" id="demoBtn">载入示例数据</button>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;">
+      <div id="courseList"></div>
+      <div class="empty" id="profileEmpty">还没有课程，先在上面添加一门，或点击"载入示例数据"快速体验。</div>
+    </div>
+  </section>
+
+  <!-- MODULE 2: SIMULATOR -->
+  <section class="panel" id="panel-sim">
+    <div class="section-head">
+      <h2>课程成绩模拟器</h2>
+      <span class="kicker" style="background:var(--sim-soft); color:var(--sim);">02</span>
+    </div>
+    <p class="section-note">已知成绩按规则直接加权计算；未公布的部分用滑块设定预期，实时看到总评、对应绩点和达标风险 —— 结果是估计区间，不是定论。</p>
+
+    <div class="card">
+      <div class="field" style="max-width:340px;">
+        <label>选择课程</label>
+        <select id="simCourseSelect"></select>
+      </div>
+      <div id="simBody"></div>
+    </div>
+  </section>
+
+  <!-- MODULE 3: PLAN -->
+  <section class="panel" id="panel-plan">
+    <div class="section-head">
+      <h2>选课方案推荐</h2>
+      <span class="kicker" style="background:var(--plan-soft); color:var(--plan);">03</span>
+    </div>
+    <p class="section-note">系统不直接告诉你"这门课一定要选"，而是展示不同取舍下的成本与风险，由你判断。</p>
+
+    <div class="card" style="margin-bottom:18px;">
+      <div class="grid cols-3">
+        <div class="field">
+          <label>每周可投入学习时间（小时）</label>
+          <input type="number" id="weeklyHours" placeholder="例如 25" min="0">
+        </div>
+        <div class="field">
+          <label>本学期优先目标</label>
+          <select id="priorityGoal">
+            <option value="gpa">GPA 稳健</option>
+            <option value="ability">专业能力优先</option>
+            <option value="baoyan">保研资格优先</option>
+            <option value="balance">控制每周学习时间</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>是否有实习 / 竞赛需要预留时间</label>
+          <select id="hasOutside">
+            <option value="no">没有</option>
+            <option value="yes">有</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn" style="background:var(--plan);" id="matchPlanBtn">生成方案对比</button></div>
+    </div>
+
+    <div class="grid cols-3" id="planCards"></div>
+
+    <div class="caution">
+      <div>⚠️</div>
+      <div><b>关于"选不上"的预案</b>抢课失败很常见。建议为每个首选课程都准备一个替代方案，并提前确认替代课程与其他课程是否存在项目周期或考试周冲突。</div>
+    </div>
+  </section>
+
+  <!-- MODULE 4: MATRIX -->
+  <section class="panel" id="panel-matrix">
+    <div class="section-head">
+      <h2>课程冲突与优先级矩阵</h2>
+      <span class="kicker" style="background:var(--matrix-soft); color:var(--matrix);">04</span>
+    </div>
+    <p class="section-note">基于"绩点档案"里的课程自动计算：剩余权重越高、学分越高，投入产出通常越大，越值得优先安排时间。</p>
+    <div class="card">
+      <table id="matrixTable">
+        <thead>
+          <tr><th>课程</th><th>学分</th><th>剩余权重</th><th>当前加权分</th><th>建议优先级</th></tr>
+        </thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+      <div class="empty" id="matrixEmpty">先在"绩点档案"中添加课程，这里会自动生成优先级排序。</div>
+    </div>
+  </section>
+
+  <!-- MODULE 5: ABILITY -->
+  <section class="panel" id="panel-ability">
+    <div class="section-head">
+      <h2>学习能力画像</h2>
+      <span class="kicker" style="background:var(--ability-soft); color:var(--ability);">05</span>
+    </div>
+    <p class="section-note">拖动滑块做一次自评估，帮助自己看清时间该往哪类任务倾斜。</p>
+
+    <div class="card">
+      <div id="abilitySliders"></div>
+    </div>
+
+    <div class="caution">
+      <div>ⓘ</div>
+      <div><b>这不是能力高低的绝对判断</b>只是基于有限数据的可解释性观察。数据不足时，不必强行得出结论。</div>
+    </div>
+  </section>
+
+</div>
+
+<!-- 状态与工具函数，其余模块脚本都依赖这里 -->
+<script src="js/state.js"></script>
+<!-- 顶部 Tab 切换 -->
+<script src="js/tabs.js"></script>
+<!-- 模块一：绩点基础档案（表单、课程列表渲染） -->
+<script src="js/profile.js"></script>
+<!-- 模块二：课程成绩模拟器 -->
+<script src="js/simulator.js"></script>
+<!-- 模块三：选课方案推荐 -->
+<script src="js/plan.js"></script>
+<!-- 模块四：优先级矩阵 -->
+<script src="js/matrix.js"></script>
+<!-- 模块五：学习能力画像 -->
+<script src="js/ability.js"></script>
+<!-- AI 接入层：预留位置，见 js/ai.js 说明 -->
+<script src="js/ai.js"></script>
+<!-- 页面初始化，必须放在所有模块脚本之后 -->
+<script src="js/main.js"></script>
+</body>
+</html>
