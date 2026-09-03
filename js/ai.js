@@ -60,3 +60,53 @@ async function getGradingItemsFromImage(imageDataUrl) {
   const data = await res.json();
   return Array.isArray(data.items) ? data.items : [];
 }
+
+/**
+ * 把一张历史成绩单/教务系统截图发给后端，换回识别出的历史课程数组。
+ * @param {string} imageDataUrl
+ * @returns {Promise<Array<{name:string, credit:number|null, score:number|null, tag:string}>>}
+ */
+async function getTranscriptItemsFromImage(imageDataUrl) {
+  const res = await fetch('/api/parse-transcript-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64: imageDataUrl })
+  });
+
+  if (!res.ok) {
+    let message = '识别失败，请稍后重试';
+    try {
+      const err = await res.json();
+      if (err.error) message = err.error;
+    } catch (e) { /* 忽略 */ }
+    throw new Error(message);
+  }
+
+  const data = await res.json();
+  return Array.isArray(data.items) ? data.items : [];
+}
+
+/**
+ * 把历史成绩 + 能力自评发给后端，换回 AI 生成的能力与方向诊断。
+ * @param {{historyCourses:Array, abilitySelfRating:object}} payload
+ * @returns {Promise<{dataNote:string, strengths:string[], watchOuts:string[], suggestion:string}>}
+ */
+async function getAbilityDiagnosis(payload) {
+  const res = await fetch('/api/ability-diagnosis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    let message = '生成失败，请稍后重试';
+    try {
+      const err = await res.json();
+      if (err.error) message = err.error;
+    } catch (e) { /* 忽略 */ }
+    throw new Error(message);
+  }
+
+  const data = await res.json();
+  return data.diagnosis;
+}

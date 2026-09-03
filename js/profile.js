@@ -54,33 +54,7 @@ document.getElementById('gpaScale').onchange = ()=>{ renderCourses(); renderSimB
 document.getElementById('targetGpa').oninput = ()=>{ renderCourses(); };
 
 /* ---------------- 从截图导入评分规则（AI 视觉识别） ---------------- */
-
-/* 把图片压缩到最长边 1400px、转成 jpeg，减小上传体积和识别耗时。
-   手机拍的原图动辄几MB，压完一般几十到几百KB。 */
-function resizeImageToBase64(file, maxDim=1400, quality=0.85){
-  return new Promise((resolve, reject)=>{
-    const reader = new FileReader();
-    reader.onerror = ()=> reject(new Error('图片读取失败，请重试'));
-    reader.onload = ()=>{
-      const img = new Image();
-      img.onerror = ()=> reject(new Error('图片解析失败，请换一张试试'));
-      img.onload = ()=>{
-        let { width, height } = img;
-        if(width > maxDim || height > maxDim){
-          const ratio = Math.min(maxDim/width, maxDim/height);
-          width = Math.round(width*ratio);
-          height = Math.round(height*ratio);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
+/* resizeImageToBase64() 现在定义在 state.js 里，profile.js / history.js 共用。 */
 
 document.getElementById('importImageBtn').onclick = ()=> document.getElementById('gradingImageInput').click();
 

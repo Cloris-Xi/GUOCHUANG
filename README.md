@@ -6,18 +6,21 @@
 ├── css/
 │   └── style.css        全部样式，含浅蓝底色和五个模块的强调色变量
 ├── js/
-│   ├── state.js          全局状态、绩点换算表、scoreToGpa()
+│   ├── state.js          全局状态、绩点换算表、scoreToGpa()、escapeHtml()、resizeImageToBase64()
 │   ├── tabs.js            顶部快速跳转导航（锚点滚动 + 滚动高亮）
-│   ├── profile.js         模块一：绩点档案（表单、课程卡片渲染、hero 数据同步）
-│   ├── simulator.js       模块二：成绩模拟器（滑块、实时计算）
-│   ├── plan.js            模块三：选课方案（AI 生成个性化建议）
-│   ├── matrix.js          模块四：优先级矩阵
-│   ├── ability.js         模块五：学习能力画像
-│   ├── ai.js              浏览器端调用 /api/course-advice 的封装
+│   ├── profile.js         模块01：绩点档案（表单、课程卡片渲染、当前状态数据同步）
+│   ├── history.js         模块02：历史成绩（手动填写 + 拖拽图片导入）
+│   ├── simulator.js       模块07：成绩模拟器（滑块、实时计算）
+│   ├── plan.js            模块09：选课方案（AI 生成个性化建议）
+│   ├── matrix.js          模块08：优先级矩阵
+│   ├── ability.js         模块04+05：学习能力自评 + AI 能力与方向诊断
+│   ├── ai.js              浏览器端调用各 /api/* 接口的封装
 │   └── main.js            页面初始化入口，必须最后加载
 ├── api/
-│   ├── course-advice.js  Vercel Serverless Function：调用 Claude 生成建议，Redis 做缓存
-│   └── parse-grading-image.js  Vercel Serverless Function：识别截图里的评分构成
+│   ├── course-advice.js         Vercel Serverless Function：生成个性化选课建议，Redis 做缓存
+│   ├── ability-diagnosis.js     Vercel Serverless Function：生成能力与方向诊断，Redis 做缓存
+│   ├── parse-grading-image.js   Vercel Serverless Function：识别截图里的评分构成
+│   └── parse-transcript-image.js Vercel Serverless Function：识别截图里的历史课程成绩
 ├── package.json
 ├── .gitignore
 └── README.md
@@ -70,11 +73,27 @@ Serverless Function，所以在 GitHub Pages 上"生成 AI 个性化建议"这�
 识别结果不保证 100% 准确（尤其是手写或者拍摩尔纹很重的截图），
 识别完之后务必自己核对一遍权重合计是不是 100%，再点"保存课程"。
 
+## 历史成绩与能力诊断
+
+"历史成绩"模块（大一新生可以直接跳过）支持两种录入方式，可以混用：
+
+- **拖拽导入**：把成绩单/教务系统截图拖进那个虚线框，或者点击选择图片，
+  支持一次选多张。每张图片都会调用 `api/parse-transcript-image.js`
+  识别成 `{name, credit, score, tag}`（`tag` 是 AI 猜的课程类型，比如
+  "数学""编程""写作"），识别出来的行会直接加到下面的表格里，不会覆盖
+  已经手动填好的内容。
+- **手动填写**：点"+ 添加一门历史课程"，自己填名称/学分/成绩/类型标签。
+
+"AI 能力与方向诊断"模块把"历史成绩"表格里的内容 + "学习能力自评"
+的五个滑块分数一起发给 `api/ability-diagnosis.js`，Claude 会结合两边
+数据判断学生在哪类课程上相对更擅长。如果历史成绩是空的（新生）或者
+样本很少，AI 会在 `dataNote` 里明确说明数据不足，不会硬编一个结论。
+
 ## 加载顺序
 
 `index.html` 里的 `<script>` 标签顺序不能随便调换：
 
-`state.js → tabs.js → profile.js → simulator.js → plan.js → matrix.js → ability.js → ai.js → main.js`
+`state.js → tabs.js → profile.js → history.js → simulator.js → plan.js → matrix.js → ability.js → ai.js → main.js`
 
 原因：后面的文件里的函数会用到前面文件定义的全局变量（如 `courses`、`simAssumed`）
 和函数（如 `scoreToGpa`），本项目没有用打包工具，靠加载顺序保证依赖关系。

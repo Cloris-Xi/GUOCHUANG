@@ -170,6 +170,18 @@
     border:1px dashed var(--line); border-radius:14px; font-size:14px;
   }
 
+  /* ---------- Dropzone（历史成绩单拖拽导入） ---------- */
+  .dropzone{
+    text-align:center; padding:34px 20px; cursor:pointer;
+    border:2px dashed var(--line); border-radius:14px;
+    background:#F8FCFF; transition:border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover{border-color:var(--profile);}
+  .dropzone.dragover{border-color:var(--profile); background:var(--profile-soft);}
+  .dropzone-icon{font-size:28px; margin-bottom:8px;}
+  .dropzone-text{font-size:14px; font-weight:700; color:var(--ink);}
+  .dropzone-hint{font-size:12.5px; color:var(--ink-soft); margin-top:6px;}
+
   .caution{
     display:flex; gap:10px; align-items:flex-start;
     background:#FFF8ED; border:1px solid #F3DDB6; color:#8A6A21;
