@@ -35,24 +35,73 @@
     </div>
     <p class="section-note">录入本学期课程与评分规则。不同学校、不同老师的评分细则都可能不同，请按实际情况填写每一项的权重。</p>
 
-    <div class="grid cols-2">
-      <div class="card">
-        <div class="field">
-          <label>绩点换算制式</label>
-          <select id="gpaScale">
-            <option value="4.0">4.0 制（常见）</option>
-            <option value="4.3">4.3 制</option>
-            <option value="5.0">5.0 制</option>
-          </select>
+    <!-- 1-1 绩点制度 -->
+    <div class="card">
+      <div class="sub-heading"><span class="n" style="background:var(--profile-soft); color:var(--profile);">1</span>绩点制度</div>
+      <div class="field" style="max-width:340px;">
+        <label>绩点换算制式</label>
+        <select id="gpaScale">
+          <option value="4.0">4.0 制（常见）</option>
+          <option value="4.3">4.3 制</option>
+          <option value="5.0">5.0 制</option>
+        </select>
+      </div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:0;">换算规则因校而异，此处采用常见对照表；后续可接入学校自定义规则模板。这里选的制式会同时用在下面"历史均绩"和"当前状态总览"的换算上。</p>
+    </div>
+
+    <!-- 1-2 历史均绩 -->
+    <div class="card" style="margin-top:16px;">
+      <div class="sub-heading"><span class="n" style="background:var(--profile-soft); color:var(--profile);">2</span>历史均绩<span class="flow-tag input" style="margin-left:8px;">可选</span></div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:-4px 0 14px;">查看/修改过往学期的成绩，也可以拖拽新的成绩单截图进来追加。<b>大一新生还没有历史成绩，跳过这一块也完全可以。</b></p>
+
+      <div class="dropzone" id="historyDropzone">
+        <input type="file" id="historyImageInput" accept="image/*" multiple style="display:none;">
+        <div class="dropzone-icon">📄</div>
+        <div class="dropzone-text"><b>拖拽成绩单截图到这里</b>，或点击选择图片（支持一次选多张，可以分学期陆续增加）</div>
+        <div class="dropzone-hint">教务系统截图、成绩查询页面截图都可以，AI 会自动识别课程名称、学分和成绩</div>
+      </div>
+      <div id="historyImportStatus"></div>
+
+      <div style="margin-top:18px;">
+        <label style="margin-bottom:10px;">已有的历史成绩（可以直接在下面修改，或点右侧 × 删除）</label>
+        <div id="historyRows"></div>
+        <div class="btn-row">
+          <button class="btn ghost" id="addHistoryRowBtn">+ 手动添加一门历史课程</button>
         </div>
-        <div class="field">
-          <label>本学期目标绩点</label>
-          <input type="number" id="targetGpa" placeholder="例如 3.7" step="0.1" min="0" max="5">
-        </div>
-        <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-4px;">换算规则因校而异，此处采用常见对照表；后续可接入学校自定义规则模板。</p>
       </div>
 
-      <div class="card">
+      <div class="grid cols-3" id="historyGpaSummary" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- 1-3 个人目标 -->
+    <div class="card" style="margin-top:16px;">
+      <div class="sub-heading"><span class="n" style="background:var(--profile-soft); color:var(--profile);">3</span>个人目标</div>
+      <div class="grid cols-2">
+        <div class="field">
+          <label>本学期目标绩点<span class="req-star">*必填</span></label>
+          <input type="number" id="targetGpa" placeholder="例如 3.7" step="0.1" min="0" max="5">
+        </div>
+        <div class="field">
+          <label>毕业 / 最终目标绩点<span class="req-star">*必填</span></label>
+          <input type="number" id="finalTargetGpa" placeholder="例如 3.8" step="0.1" min="0" max="5">
+        </div>
+      </div>
+      <div class="field" style="margin-top:4px;">
+        <label>其他目标要求（选填）</label>
+        <div class="goal-checks">
+          <label><input type="checkbox" class="goal-check" value="保研">保研</label>
+          <label><input type="checkbox" class="goal-check" value="奖学金">奖学金</label>
+          <label><input type="checkbox" class="goal-check" value="转专业">转专业</label>
+          <label><input type="checkbox" class="goal-check" value="出国交换">出国交换</label>
+        </div>
+        <input type="text" id="otherGoalsText" placeholder="还有其他要求可以写在这里，比如具体的保研排名要求（选填）">
+      </div>
+    </div>
+
+    <!-- 1-4 本学期课程 -->
+    <div class="card" style="margin-top:16px;">
+      <div class="sub-heading"><span class="n" style="background:var(--profile-soft); color:var(--profile);">4</span>本学期课程</div>
+      <div class="grid cols-2">
         <div class="field">
           <label>课程名称</label>
           <input type="text" id="cName" placeholder="例如 数据结构">
@@ -68,10 +117,8 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="card" style="margin-top:16px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin:14px 0 10px;">
         <label style="margin-bottom:0;">评分构成（权重需合计 100%，已知成绩可先填，未知的留空）</label>
         <div class="btn-row" style="margin-top:0;">
           <input type="file" id="gradingImageInput" accept="image/*" style="display:none;">
@@ -108,36 +155,16 @@
 
   <div class="flow-arrow">↓</div>
 
-  <!-- ============ STEP 2: 能力诊断（历史成绩 + 能力自评 + AI诊断） ============ -->
+  <!-- ============ STEP 2: 能力诊断（能力自评 + AI诊断，历史均绩已挪到步骤01） ============ -->
   <section class="panel" id="sec-ability-diagnosis">
     <div class="section-head">
       <h2>能力诊断</h2>
       <span class="kicker" style="background:var(--ability-soft); color:var(--ability);">02</span>
       <span class="flow-tag input">需要填写</span>
     </div>
-    <p class="section-note">把历史成绩和能力自评填好，AI 会结合这两部分数据判断你的相对优势方向。<b>大一新生没有历史成绩，跳过那部分直接填能力自评也可以。</b></p>
+    <p class="section-note">拖动滑块做一次自评估。AI 会结合"绩点档案"里的历史均绩和这里的自评，判断你的相对优势方向——历史均绩是可选的，只填自评也能生成诊断，只是判断会更依赖主观自评。</p>
 
     <div class="card">
-      <label style="margin-bottom:10px;">历史成绩（可选）</label>
-      <div class="dropzone" id="historyDropzone">
-        <input type="file" id="historyImageInput" accept="image/*" multiple style="display:none;">
-        <div class="dropzone-icon">📄</div>
-        <div class="dropzone-text"><b>拖拽成绩单截图到这里</b>，或点击选择图片（支持一次选多张）</div>
-        <div class="dropzone-hint">教务系统截图、成绩查询页面截图都可以，AI 会自动识别课程名称、学分和成绩</div>
-      </div>
-      <div id="historyImportStatus"></div>
-
-      <div style="margin-top:18px;">
-        <label style="margin-bottom:10px;">或者手动填写</label>
-        <div id="historyRows"></div>
-        <div class="btn-row">
-          <button class="btn ghost" id="addHistoryRowBtn">+ 添加一门历史课程</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <label style="margin-bottom:10px;">学习能力自评</label>
       <div id="abilitySliders"></div>
     </div>
 
@@ -154,6 +181,7 @@
       <div><b>这不是能力高低的绝对判断</b>只是基于有限数据的可解释性观察。数据不足时，不必强行得出结论。</div>
     </div>
   </section>
+
 
   <div class="flow-arrow">↓</div>
 

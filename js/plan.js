@@ -34,10 +34,20 @@ document.getElementById('matchPlanBtn').onclick = async ()=>{
     return;
   }
 
+  const targetGpa = parseFloat(document.getElementById('targetGpa').value);
+  const finalTargetGpa = parseFloat(document.getElementById('finalTargetGpa').value);
+  if(isNaN(targetGpa) || isNaN(finalTargetGpa)){
+    resultBox.innerHTML = `<div class="caution"><div>⚠️</div><div><b>先填两个必填的目标绩点</b>回到"绩点档案 → 个人目标"，把"本学期目标绩点"和"毕业/最终目标绩点"都填上，AI 需要这两个数字才能判断该怎么取舍。</div></div>`;
+    return;
+  }
+
   const originalText = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'AI 正在分析…';
   resultBox.innerHTML = `<div class="empty">AI 正在根据你的课程和目标生成建议，通常需要几秒到十几秒…</div>`;
+
+  const otherGoals = [...document.querySelectorAll('.goal-check:checked')].map(c=>c.value);
+  const otherGoalsText = document.getElementById('otherGoalsText').value.trim();
 
   const payload = {
     courses: courses.map(c=>({
@@ -46,11 +56,14 @@ document.getElementById('matchPlanBtn').onclick = async ()=>{
       target: c.target,
       items: c.items.map(it=>({name: it.name, weight: it.weight, score: it.score}))
     })),
-    targetGpa: parseFloat(document.getElementById('targetGpa').value) || null,
+    targetGpa,
+    finalTargetGpa,
     gpaScale: document.getElementById('gpaScale').value,
     weeklyHours: (()=>{ const h = parseFloat(document.getElementById('weeklyHours').value); return isNaN(h) ? null : h; })(),
     priorityGoal: document.getElementById('priorityGoal').value,
-    hasOutside: document.getElementById('hasOutside').value
+    hasOutside: document.getElementById('hasOutside').value,
+    otherGoals,
+    otherGoalsText: otherGoalsText || null
   };
 
   try {

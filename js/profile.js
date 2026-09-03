@@ -50,7 +50,7 @@ document.getElementById('demoBtn').onclick = ()=>{
   renderCourses();
 };
 
-document.getElementById('gpaScale').onchange = ()=>{ renderCourses(); renderSimBody(); };
+document.getElementById('gpaScale').onchange = ()=>{ renderCourses(); renderSimBody(); renderHistoryGpaSummary(); };
 document.getElementById('targetGpa').oninput = ()=>{ renderCourses(); };
 
 /* ---------------- 从截图导入评分规则（AI 视觉识别） ---------------- */
