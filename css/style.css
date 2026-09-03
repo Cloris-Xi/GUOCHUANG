@@ -85,6 +85,7 @@
     margin:44px 0 30px; color:var(--ink-soft); font-size:13px; font-weight:700;
   }
   .flow-divider::before, .flow-divider::after{content:''; flex:1; height:1px; background:var(--line);}
+  .flow-divider.sub{margin:30px 0 22px; font-size:12px;}
   .flow-arrow{
     display:flex; justify-content:center; margin:6px 0 2px;
     color:var(--line); font-size:22px;
