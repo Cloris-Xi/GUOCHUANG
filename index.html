@@ -33,7 +33,7 @@
       <span class="kicker" style="background:var(--profile-soft); color:var(--profile);">01</span>
       <span class="flow-tag input">需要填写</span>
     </div>
-    <p class="section-note">录入本学期课程与评分规则。不同学校、不同老师的评分细则都可能不同，请按实际情况填写每一项的权重。</p>
+    <p class="section-note">先确定换算制式和目标，历史均绩可选填。本学期具体课程放在后面"成绩模拟计算器"那一步录入。</p>
 
     <!-- 1-1 绩点制度 -->
     <div class="card">
@@ -97,60 +97,6 @@
         <input type="text" id="otherGoalsText" placeholder="还有其他要求可以写在这里，比如具体的保研排名要求（选填）">
       </div>
     </div>
-
-    <!-- 1-4 本学期课程 -->
-    <div class="card" style="margin-top:16px;">
-      <div class="sub-heading"><span class="n" style="background:var(--profile-soft); color:var(--profile);">4</span>本学期课程</div>
-      <div class="grid cols-2">
-        <div class="field">
-          <label>课程名称</label>
-          <input type="text" id="cName" placeholder="例如 数据结构">
-        </div>
-        <div class="grid cols-2">
-          <div class="field">
-            <label>学分</label>
-            <input type="number" id="cCredit" placeholder="例如 3" min="0" step="0.5">
-          </div>
-          <div class="field">
-            <label>课程目标总评（可选）</label>
-            <input type="number" id="cTarget" placeholder="例如 85" min="0" max="100">
-          </div>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin:14px 0 10px;">
-        <label style="margin-bottom:0;">评分构成（权重需合计 100%，已知成绩可先填，未知的留空）</label>
-        <div class="btn-row" style="margin-top:0;">
-          <input type="file" id="gradingImageInput" accept="image/*" style="display:none;">
-          <button class="btn ghost" id="importImageBtn" style="border-color:var(--profile); color:var(--profile);">📷 从截图导入评分规则</button>
-        </div>
-      </div>
-      <div id="imageImportStatus"></div>
-      <div id="itemRows"></div>
-      <div class="btn-row">
-        <button class="btn ghost" id="addItemBtn">+ 添加评分项</button>
-      </div>
-      <div class="btn-row" style="margin-top:14px;">
-        <button class="btn" style="background:var(--profile);" id="addCourseBtn">保存课程</button>
-        <button class="btn ghost" id="demoBtn">载入示例数据</button>
-      </div>
-    </div>
-
-    <div style="margin-top:22px;">
-      <div id="courseList"></div>
-      <div class="empty" id="profileEmpty">还没有课程，先在上面添加一门，或点击"载入示例数据"快速体验。</div>
-    </div>
-
-    <div class="flow-divider sub">根据以上录入自动生成</div>
-
-    <p class="section-note" style="margin-top:0;">当前状态总览：未公布的评分项默认按 75 分估算，仅供参考。</p>
-    <div class="hero-visual" style="max-width:none;">
-      <div class="num" id="heroGpa">--</div>
-      <div class="lbl">当前预估学期绩点（含未完成项估算）</div>
-      <div class="row"><span>已录入课程</span><b id="heroCourses">0 门</b></div>
-      <div class="row"><span>距目标绩点</span><b id="heroGap">未设置目标</b></div>
-      <div class="row"><span>本周建议优先课程</span><b id="heroFocus">--</b></div>
-    </div>
   </section>
 
   <div class="flow-arrow">↓</div>
@@ -160,17 +106,21 @@
     <div class="section-head">
       <h2>能力诊断</h2>
       <span class="kicker" style="background:var(--ability-soft); color:var(--ability);">02</span>
-      <span class="flow-tag input">需要填写</span>
+      <span class="flow-tag input">选填</span>
     </div>
-    <p class="section-note">拖动滑块做一次自评估。AI 会结合"绩点档案"里的历史均绩和这里的自评，判断你的相对优势方向——历史均绩是可选的，只填自评也能生成诊断，只是判断会更依赖主观自评。</p>
+    <p class="section-note">这一步整体是选填的：AI 能力评估主要靠"绩点档案"里的历史均绩，自评滑块是锦上添花，两边都没有也能跳过这一步。</p>
 
     <div class="card">
+      <div class="sub-heading"><span class="n" style="background:var(--ability-soft); color:var(--ability);">1</span>学习能力自评（时间与偏好）<span class="flow-tag input" style="margin-left:8px;">选填</span></div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:-4px 0 14px;">拖动滑块做一次自评估，涵盖考试、项目、过程管理、协作和时间安排这几类习惯偏好——不填也没关系，下面的 AI 能力评估仍然可以只靠历史均绩生成。</p>
       <div id="abilitySliders"></div>
     </div>
 
     <div class="flow-divider sub">根据以上录入自动生成</div>
 
     <div class="card" style="margin-bottom:18px;">
+      <div class="sub-heading"><span class="n" style="background:var(--ability-soft); color:var(--ability);">2</span>AI能力评估（结合历史成绩与能力自评）</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:-4px 0 14px;">会读取"绩点档案"里的历史均绩，加上你上面填的自评滑块（如果填了的话），两边一起交给 AI 判断你的相对优势方向。</p>
       <div class="btn-row"><button class="btn" style="background:var(--ability);" id="diagnoseAbilityBtn">生成能力诊断</button></div>
     </div>
 
@@ -244,11 +194,69 @@
     <div class="section-head">
       <h2>成绩模拟计算器</h2>
       <span class="kicker" style="background:var(--sim-soft); color:var(--sim);">04</span>
-      <span class="flow-tag output">自动生成</span>
+      <span class="flow-tag input">需要填写</span>
     </div>
-    <p class="section-note">已知成绩按规则直接加权计算；未公布的部分用滑块设定预期，实时看到总评、对应绩点和达标风险 —— 结果是估计区间，不是定论。</p>
+    <p class="section-note">先录入本学期课程和评分规则。不同学校、不同老师的评分细则都可能不同，请按实际情况填写每一项的权重。</p>
 
     <div class="card">
+      <div class="sub-heading"><span class="n" style="background:var(--sim-soft); color:var(--sim);">1</span>本学期课程</div>
+      <div class="grid cols-2">
+        <div class="field">
+          <label>课程名称</label>
+          <input type="text" id="cName" placeholder="例如 数据结构">
+        </div>
+        <div class="grid cols-2">
+          <div class="field">
+            <label>学分</label>
+            <input type="number" id="cCredit" placeholder="例如 3" min="0" step="0.5">
+          </div>
+          <div class="field">
+            <label>课程目标总评（可选）</label>
+            <input type="number" id="cTarget" placeholder="例如 85" min="0" max="100">
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin:14px 0 10px;">
+        <label style="margin-bottom:0;">评分构成（权重需合计 100%，已知成绩可先填，未知的留空）</label>
+        <div class="btn-row" style="margin-top:0;">
+          <input type="file" id="gradingImageInput" accept="image/*" style="display:none;">
+          <button class="btn ghost" id="importImageBtn" style="border-color:var(--profile); color:var(--profile);">📷 从截图导入评分规则</button>
+        </div>
+      </div>
+      <div id="imageImportStatus"></div>
+      <div id="itemRows"></div>
+      <div class="btn-row">
+        <button class="btn ghost" id="addItemBtn">+ 添加评分项</button>
+      </div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn" style="background:var(--profile);" id="addCourseBtn">保存课程</button>
+        <button class="btn ghost" id="demoBtn">载入示例数据</button>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;">
+      <div id="courseList"></div>
+      <div class="empty" id="profileEmpty">还没有课程，先在上面添加一门，或点击"载入示例数据"快速体验。</div>
+    </div>
+
+    <div class="flow-divider sub">根据以上录入自动生成</div>
+
+    <div class="card">
+      <div class="sub-heading"><span class="n" style="background:var(--sim-soft); color:var(--sim);">2</span>当前状态总览</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:-4px 0 14px;">未公布的评分项默认按 75 分估算，仅供参考。</p>
+      <div class="hero-visual" style="max-width:none;">
+        <div class="num" id="heroGpa">--</div>
+        <div class="lbl">当前预估学期绩点（含未完成项估算）</div>
+        <div class="row"><span>已录入课程</span><b id="heroCourses">0 门</b></div>
+        <div class="row"><span>距目标绩点</span><b id="heroGap">未设置目标</b></div>
+        <div class="row"><span>本周建议优先课程</span><b id="heroFocus">--</b></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="sub-heading"><span class="n" style="background:var(--sim-soft); color:var(--sim);">3</span>单科成绩模拟</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:-4px 0 14px;">已知成绩按规则直接加权计算；未公布的部分用滑块设定预期，实时看到总评、对应绩点和达标风险 —— 结果是估计区间，不是定论。</p>
       <div class="field" style="max-width:340px;">
         <label>选择课程</label>
         <select id="simCourseSelect"></select>
