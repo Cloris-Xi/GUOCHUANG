@@ -142,9 +142,34 @@
       <span class="kicker" style="background:var(--plan-soft); color:var(--plan);">03</span>
       <span class="flow-tag input">需要填写</span>
     </div>
-    <p class="section-note">这几项会交给 AI，帮它判断哪种策略更适合你，不用填得很精确，大概估计就行。</p>
+    <p class="section-note">先列出已有的专业课和所有想选的选修课，AI 会结合这份候选清单、你的目标和时间，帮你判断怎么取舍——填的时候不用太精确，大概估计就行。</p>
 
     <div class="card">
+      <div class="sub-heading"><span class="n" style="background:var(--plan-soft); color:var(--plan);">1</span>候选课程<span class="flow-tag input" style="margin-left:8px;">已有专业课 + 想选的选修课</span></div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:-4px 0 14px;">把已经确定要上的专业课、和所有还在犹豫的选修课都列进来，每门都填上学分和上课时间，系统会自动帮你查时间冲突。</p>
+
+      <div class="dropzone" id="candidateDropzone">
+        <input type="file" id="candidateImageInput" accept="image/*" multiple style="display:none;">
+        <div class="dropzone-icon">🗓️</div>
+        <div class="dropzone-text"><b>拖拽选课系统截图到这里</b>，或点击选择图片（支持一次选多张）</div>
+        <div class="dropzone-hint">教务系统的课表/选课列表截图都可以，AI 会识别课程名称、学分、上课时间和是否必修</div>
+      </div>
+      <div id="candidateImportStatus"></div>
+
+      <div style="margin-top:18px;">
+        <label style="margin-bottom:6px;">候选课程列表</label>
+        <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">上课时间格式建议："周二 3-4节；周四 1-2节"，多个时间段用中文分号隔开，系统按这个格式查冲突。</p>
+        <div id="candidateRows"></div>
+        <div class="btn-row">
+          <button class="btn ghost" id="addCandidateRowBtn">+ 手动添加一门课程</button>
+        </div>
+      </div>
+
+      <div id="candidateConflicts" style="margin-top:16px;"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="sub-heading"><span class="n" style="background:var(--plan-soft); color:var(--plan);">2</span>时间与目标偏好</div>
       <div class="grid cols-3">
         <div class="field">
           <label>每周可投入学习时间（小时）</label>
@@ -171,7 +196,7 @@
 
     <div class="flow-divider sub">根据以上录入自动生成</div>
 
-    <p class="section-note" style="margin-top:0;">系统不直接告诉你"这门课一定要选"，而是结合你填写的课程、目标和时间，展示不同取舍下的成本与风险，由你判断。</p>
+    <p class="section-note" style="margin-top:0;">系统不直接告诉你"这门课一定要选"，而是结合你填写的候选课程、目标和时间，展示不同取舍下的成本与风险，由你判断。</p>
 
     <div class="card" style="margin-bottom:18px;">
       <div class="btn-row"><button class="btn" style="background:var(--plan);" id="matchPlanBtn">生成 AI 个性化建议</button></div>
@@ -267,23 +292,21 @@
 
   <div class="flow-arrow">↓</div>
 
-  <!-- ============ STEP 5: 学习方案（原优先级矩阵） ============ -->
+  <!-- ============ STEP 5: 学习方案（AI 生成：优先级矩阵 + 目标可达性分析 + 学习方案） ============ -->
   <section class="panel" id="sec-plan">
     <div class="section-head">
       <h2>学习方案</h2>
       <span class="kicker" style="background:var(--matrix-soft); color:var(--matrix);">05</span>
-      <span class="flow-tag output">自动生成</span>
+      <span class="flow-tag output">点击生成</span>
     </div>
-    <p class="section-note">基于"绩点档案"里的课程自动计算：剩余权重越高、学分越高，投入产出通常越大，越值得优先安排时间——这是接下来几周具体该怎么分配时间的参考。</p>
-    <div class="card">
-      <table id="matrixTable">
-        <thead>
-          <tr><th>课程</th><th>学分</th><th>剩余权重</th><th>当前加权分</th><th>建议优先级</th></tr>
-        </thead>
-        <tbody id="matrixBody"></tbody>
-      </table>
-      <div class="empty" id="matrixEmpty">先在"绩点档案"中添加课程，这里会自动生成优先级排序。</div>
+    <p class="section-note">结合"成绩模拟计算器"里的课程、"个性化选课建议"里的候选课程和目标绩点，AI 生成一份包含优先级排序、目标可达性判断和几种取舍方案的学习方案——概率和标签都是倾向性判断，不是精确预测。</p>
+
+    <div class="card" style="margin-bottom:18px;">
+      <div class="btn-row"><button class="btn" style="background:var(--matrix);" id="generatePlanBtn">生成学习方案</button></div>
     </div>
+
+    <div id="studyPlanResult" style="display:none;"></div>
+    <div class="empty" id="studyPlanEmpty">先在"成绩模拟计算器"里添加至少一门本学期课程，再回来生成学习方案。</div>
   </section>
 
 </div>
@@ -296,18 +319,20 @@
 <script src="js/tabs.js"></script>
 <!-- 模块一：绩点基础档案（表单、课程列表渲染） -->
 <script src="js/profile.js"></script>
-<!-- 模块二：能力诊断（历史成绩录入 + 拖拽图片导入） -->
+<!-- 模块01内：历史均绩录入 + 拖拽图片导入 -->
 <script src="js/history.js"></script>
-<!-- 模块二：课程成绩模拟器 -->
+<!-- 模块03内：候选课程（手动填写 + 拖拽图片导入 + 时间冲突检测） -->
+<script src="js/candidates.js"></script>
+<!-- 模块04：成绩模拟计算器 -->
 <script src="js/simulator.js"></script>
-<!-- 模块三：个性化选课建议 -->
+<!-- 模块03：个性化选课建议 -->
 <script src="js/plan.js"></script>
-<!-- 模块四：学习方案（原优先级矩阵） -->
+<!-- 模块五：学习方案（AI 生成：优先级矩阵+目标可达性分析+四种方案） -->
 <script src="js/matrix.js"></script>
-<!-- 模块五：学习能力自评滑块 -->
+<!-- 模块02：学习能力自评滑块 -->
 <script src="js/ability.js"></script>
 <!-- AI 接入层：调用 /api/course-advice、/api/ability-diagnosis、
-     /api/parse-grading-image、/api/parse-transcript-image -->
+     /api/parse-grading-image、/api/parse-transcript-image、/api/parse-schedule-image -->
 <script src="js/ai.js"></script>
 <!-- 页面初始化，必须放在所有模块脚本之后 -->
 <script src="js/main.js"></script>

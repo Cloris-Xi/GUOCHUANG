@@ -161,5 +161,4 @@ function renderCourses(){
   }
 
   renderSimSelect();
-  renderMatrix();
 }

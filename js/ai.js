@@ -110,3 +110,54 @@ async function getAbilityDiagnosis(payload) {
   const data = await res.json();
   return data.diagnosis;
 }
+
+/**
+ * 把一张选课系统/课表截图发给后端，换回识别出的课程数组。
+ * @param {string} imageDataUrl
+ * @returns {Promise<Array<{name:string, credit:number|null, type:string, time:string}>>}
+ */
+async function getScheduleItemsFromImage(imageDataUrl) {
+  const res = await fetch('/api/parse-schedule-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64: imageDataUrl })
+  });
+
+  if (!res.ok) {
+    let message = '识别失败，请稍后重试';
+    try {
+      const err = await res.json();
+      if (err.error) message = err.error;
+    } catch (e) { /* 忽略 */ }
+    throw new Error(message);
+  }
+
+  const data = await res.json();
+  return Array.isArray(data.items) ? data.items : [];
+}
+
+/**
+ * 把课程、候选课程、目标绩点等打包发给后端，换回 AI 生成的学习方案
+ * （优先级矩阵 + 目标可达性分析 + 四种固定命名的取舍方案）。
+ * @param {object} payload
+ * @returns {Promise<{priorityMatrix:Array, achievability:object, plans:object}>}
+ */
+async function getStudyPlan(payload) {
+  const res = await fetch('/api/study-plan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    let message = '生成失败，请稍后重试';
+    try {
+      const err = await res.json();
+      if (err.error) message = err.error;
+    } catch (e) { /* 忽略 */ }
+    throw new Error(message);
+  }
+
+  const data = await res.json();
+  return data.plan;
+}

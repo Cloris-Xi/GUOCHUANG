@@ -48,6 +48,13 @@ document.getElementById('matchPlanBtn').onclick = async ()=>{
 
   const otherGoals = [...document.querySelectorAll('.goal-check:checked')].map(c=>c.value);
   const otherGoalsText = document.getElementById('otherGoalsText').value.trim();
+  const candidateCourses = getCandidateCoursesFromDOM();
+  const candidateConflicts = findConflicts(candidateCourses).map(c=>({
+    courseA: c.a, courseB: c.b,
+    day: WEEKDAY_LABEL[c.day],
+    slotA: `${c.aSlot.start}-${c.aSlot.end}节`,
+    slotB: `${c.bSlot.start}-${c.bSlot.end}节`
+  }));
 
   const payload = {
     courses: courses.map(c=>({
@@ -56,6 +63,8 @@ document.getElementById('matchPlanBtn').onclick = async ()=>{
       target: c.target,
       items: c.items.map(it=>({name: it.name, weight: it.weight, score: it.score}))
     })),
+    candidateCourses,
+    candidateConflicts,
     targetGpa,
     finalTargetGpa,
     gpaScale: document.getElementById('gpaScale').value,
