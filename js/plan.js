@@ -90,7 +90,3 @@ function renderAIAdvice(advice){
   html += `</div>`;
   resultBox.innerHTML = html;
 }
-
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}

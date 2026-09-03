@@ -13,3 +13,10 @@ function scoreToGpa(score, scale){
   for(const [min,pt] of table){ if(score>=min) return pt; }
   return 0;
 }
+
+/* 全局共用的转义函数：任何要塞进 innerHTML 的用户/AI输入内容都应该过一遍这个，
+   放在最先加载的 state.js 里，确保后面所有模块（包括页面初始化时就会跑的
+   profile.js 默认行）都能直接调用。 */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}

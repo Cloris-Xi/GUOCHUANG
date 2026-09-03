@@ -11,40 +11,31 @@
 <body>
 <div class="wrap">
 
-  <!-- HERO -->
-  <div class="hero">
-    <div>
-      <h1 class="display">看清每一分投入，能换来多少绩点。</h1>
-      <p>学业罗盘把选课冲突、评分规则和剩余任务折算成确定性的数字，让你在期末前就知道"目标还差多少、这周该先做哪门课"。</p>
-      <div class="hero-tags">
-        <span class="tag">规则引擎计算，不靠大模型猜分</span>
-        <span class="tag">支持自定义绩点换算</span>
-        <span class="tag">展示区间，不包装成定论</span>
-      </div>
-    </div>
-    <div class="hero-visual">
-      <div class="num" id="heroGpa">--</div>
-      <div class="lbl">当前预估学期绩点（含未完成项估算）</div>
-      <div class="row"><span>已录入课程</span><b id="heroCourses">0 门</b></div>
-      <div class="row"><span>距目标绩点</span><b id="heroGap">未设置目标</b></div>
-      <div class="row"><span>本周建议优先课程</span><b id="heroFocus">--</b></div>
-    </div>
+  <!-- HEADER -->
+  <div class="page-head">
+    <h1 class="display">看清每一分投入，能换来多少绩点。</h1>
+    <p>从上到下走一遍：先填你的课程和情况，往下滚就能看到模拟结果、优先级排序和 AI 给的个性化建议。</p>
   </div>
 
-  <!-- TABS -->
+  <!-- QUICK JUMP NAV -->
   <div class="tabs" id="tabs">
-    <button class="tab active" data-tab="profile" style="border-color:var(--profile); color:var(--profile);"><span class="dot" style="background:var(--profile)"></span>绩点档案</button>
-    <button class="tab" data-tab="sim" style="border-color:var(--sim); color:var(--sim);"><span class="dot" style="background:var(--sim)"></span>成绩模拟器</button>
-    <button class="tab" data-tab="plan" style="border-color:var(--plan); color:var(--plan);"><span class="dot" style="background:var(--plan)"></span>选课方案</button>
-    <button class="tab" data-tab="matrix" style="border-color:var(--matrix); color:var(--matrix);"><span class="dot" style="background:var(--matrix)"></span>优先级矩阵</button>
-    <button class="tab" data-tab="ability" style="border-color:var(--ability); color:var(--ability);"><span class="dot" style="background:var(--ability)"></span>学习能力画像</button>
+    <button class="tab" data-target="sec-profile" data-color="var(--profile)" style="border-color:var(--profile); color:var(--profile);"><span class="dot" style="background:var(--profile)"></span>① 绩点档案</button>
+    <button class="tab" data-target="sec-context" data-color="var(--plan)" style="border-color:var(--plan); color:var(--plan);"><span class="dot" style="background:var(--plan)"></span>② 时间与偏好</button>
+    <button class="tab" data-target="sec-ability" data-color="var(--ability)" style="border-color:var(--ability); color:var(--ability);"><span class="dot" style="background:var(--ability)"></span>③ 能力自评</button>
+    <button class="tab" data-target="sec-overview" data-color="var(--profile)" style="border-color:var(--profile); color:var(--profile);"><span class="dot" style="background:var(--profile)"></span>④ 当前状态</button>
+    <button class="tab" data-target="sec-sim" data-color="var(--sim)" style="border-color:var(--sim); color:var(--sim);"><span class="dot" style="background:var(--sim)"></span>⑤ 成绩模拟</button>
+    <button class="tab" data-target="sec-matrix" data-color="var(--matrix)" style="border-color:var(--matrix); color:var(--matrix);"><span class="dot" style="background:var(--matrix)"></span>⑥ 优先级矩阵</button>
+    <button class="tab" data-target="sec-advice" data-color="var(--plan)" style="border-color:var(--plan); color:var(--plan);"><span class="dot" style="background:var(--plan)"></span>⑦ AI 选课建议</button>
   </div>
 
-  <!-- MODULE 1: PROFILE -->
-  <section class="panel active" id="panel-profile">
+  <div class="flow-divider">需要你填写</div>
+
+  <!-- SECTION 1: PROFILE (INPUT) -->
+  <section class="panel" id="sec-profile">
     <div class="section-head">
       <h2>绩点基础档案</h2>
       <span class="kicker" style="background:var(--profile-soft); color:var(--profile);">01</span>
+      <span class="flow-tag input">需要填写</span>
     </div>
     <p class="section-note">录入本学期课程与评分规则。不同学校、不同老师的评分细则都可能不同，请按实际情况填写每一项的权重。</p>
 
@@ -84,7 +75,14 @@
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <label style="margin-bottom:10px;">评分构成（权重需合计 100%，已知成绩可先填，未知的留空）</label>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+        <label style="margin-bottom:0;">评分构成（权重需合计 100%，已知成绩可先填，未知的留空）</label>
+        <div class="btn-row" style="margin-top:0;">
+          <input type="file" id="gradingImageInput" accept="image/*" style="display:none;">
+          <button class="btn ghost" id="importImageBtn" style="border-color:var(--profile); color:var(--profile);">📷 从截图导入评分规则</button>
+        </div>
+      </div>
+      <div id="imageImportStatus"></div>
       <div id="itemRows"></div>
       <div class="btn-row">
         <button class="btn ghost" id="addItemBtn">+ 添加评分项</button>
@@ -101,32 +99,18 @@
     </div>
   </section>
 
-  <!-- MODULE 2: SIMULATOR -->
-  <section class="panel" id="panel-sim">
+  <div class="flow-arrow">↓</div>
+
+  <!-- SECTION 2: TIME & PRIORITY (INPUT) -->
+  <section class="panel" id="sec-context">
     <div class="section-head">
-      <h2>课程成绩模拟器</h2>
-      <span class="kicker" style="background:var(--sim-soft); color:var(--sim);">02</span>
+      <h2>时间与目标偏好</h2>
+      <span class="kicker" style="background:var(--plan-soft); color:var(--plan);">02</span>
+      <span class="flow-tag input">需要填写</span>
     </div>
-    <p class="section-note">已知成绩按规则直接加权计算；未公布的部分用滑块设定预期，实时看到总评、对应绩点和达标风险 —— 结果是估计区间，不是定论。</p>
+    <p class="section-note">这几项会在最后一步交给 AI，帮它判断哪种策略更适合你，不用填得很精确，大概估计就行。</p>
 
     <div class="card">
-      <div class="field" style="max-width:340px;">
-        <label>选择课程</label>
-        <select id="simCourseSelect"></select>
-      </div>
-      <div id="simBody"></div>
-    </div>
-  </section>
-
-  <!-- MODULE 3: PLAN -->
-  <section class="panel" id="panel-plan">
-    <div class="section-head">
-      <h2>选课方案推荐</h2>
-      <span class="kicker" style="background:var(--plan-soft); color:var(--plan);">03</span>
-    </div>
-    <p class="section-note">系统不直接告诉你"这门课一定要选"，而是展示不同取舍下的成本与风险，由你判断。</p>
-
-    <div class="card" style="margin-bottom:18px;">
       <div class="grid cols-3">
         <div class="field">
           <label>每周可投入学习时间（小时）</label>
@@ -149,24 +133,73 @@
           </select>
         </div>
       </div>
-      <div class="btn-row"><button class="btn" style="background:var(--plan);" id="matchPlanBtn">生成 AI 个性化建议</button></div>
-    </div>
-
-    <div class="grid cols-3" id="planCards"></div>
-
-    <div id="aiAdviceResult" style="display:none;"></div>
-
-    <div class="caution">
-      <div>⚠️</div>
-      <div><b>关于"选不上"的预案</b>抢课失败很常见。建议为每个首选课程都准备一个替代方案，并提前确认替代课程与其他课程是否存在项目周期或考试周冲突。</div>
     </div>
   </section>
 
-  <!-- MODULE 4: MATRIX -->
-  <section class="panel" id="panel-matrix">
+  <div class="flow-arrow">↓</div>
+
+  <!-- SECTION 3: ABILITY (INPUT) -->
+  <section class="panel" id="sec-ability">
+    <div class="section-head">
+      <h2>学习能力自评</h2>
+      <span class="kicker" style="background:var(--ability-soft); color:var(--ability);">03</span>
+      <span class="flow-tag input">需要填写</span>
+    </div>
+    <p class="section-note">拖动滑块做一次自评估，帮助自己看清时间该往哪类任务倾斜——这不是能力高低的绝对判断，只是一次自我观察。</p>
+
+    <div class="card">
+      <div id="abilitySliders"></div>
+    </div>
+  </section>
+
+  <div class="flow-divider">以下内容根据你上面的输入自动生成</div>
+
+  <!-- SECTION 4: OVERVIEW (OUTPUT) -->
+  <section class="panel" id="sec-overview">
+    <div class="section-head">
+      <h2>当前状态总览</h2>
+      <span class="kicker" style="background:var(--profile-soft); color:var(--profile);">04</span>
+      <span class="flow-tag output">自动生成</span>
+    </div>
+    <p class="section-note">根据你在上面录入的课程实时算出来的，未公布的评分项默认按 75 分估算，仅供参考。</p>
+
+    <div class="hero-visual" style="max-width:none;">
+      <div class="num" id="heroGpa">--</div>
+      <div class="lbl">当前预估学期绩点（含未完成项估算）</div>
+      <div class="row"><span>已录入课程</span><b id="heroCourses">0 门</b></div>
+      <div class="row"><span>距目标绩点</span><b id="heroGap">未设置目标</b></div>
+      <div class="row"><span>本周建议优先课程</span><b id="heroFocus">--</b></div>
+    </div>
+  </section>
+
+  <div class="flow-arrow">↓</div>
+
+  <!-- SECTION 5: SIMULATOR (OUTPUT) -->
+  <section class="panel" id="sec-sim">
+    <div class="section-head">
+      <h2>课程成绩模拟器</h2>
+      <span class="kicker" style="background:var(--sim-soft); color:var(--sim);">05</span>
+      <span class="flow-tag output">自动生成</span>
+    </div>
+    <p class="section-note">已知成绩按规则直接加权计算；未公布的部分用滑块设定预期，实时看到总评、对应绩点和达标风险 —— 结果是估计区间，不是定论。</p>
+
+    <div class="card">
+      <div class="field" style="max-width:340px;">
+        <label>选择课程</label>
+        <select id="simCourseSelect"></select>
+      </div>
+      <div id="simBody"></div>
+    </div>
+  </section>
+
+  <div class="flow-arrow">↓</div>
+
+  <!-- SECTION 6: MATRIX (OUTPUT) -->
+  <section class="panel" id="sec-matrix">
     <div class="section-head">
       <h2>课程冲突与优先级矩阵</h2>
-      <span class="kicker" style="background:var(--matrix-soft); color:var(--matrix);">04</span>
+      <span class="kicker" style="background:var(--matrix-soft); color:var(--matrix);">06</span>
+      <span class="flow-tag output">自动生成</span>
     </div>
     <p class="section-note">基于"绩点档案"里的课程自动计算：剩余权重越高、学分越高，投入产出通常越大，越值得优先安排时间。</p>
     <div class="card">
@@ -180,29 +213,37 @@
     </div>
   </section>
 
-  <!-- MODULE 5: ABILITY -->
-  <section class="panel" id="panel-ability">
-    <div class="section-head">
-      <h2>学习能力画像</h2>
-      <span class="kicker" style="background:var(--ability-soft); color:var(--ability);">05</span>
-    </div>
-    <p class="section-note">拖动滑块做一次自评估，帮助自己看清时间该往哪类任务倾斜。</p>
+  <div class="flow-arrow">↓</div>
 
-    <div class="card">
-      <div id="abilitySliders"></div>
+  <!-- SECTION 7: AI ADVICE (OUTPUT) -->
+  <section class="panel" id="sec-advice">
+    <div class="section-head">
+      <h2>AI 个性化选课建议</h2>
+      <span class="kicker" style="background:var(--plan-soft); color:var(--plan);">07</span>
+      <span class="flow-tag output">点击生成</span>
     </div>
+    <p class="section-note">系统不直接告诉你"这门课一定要选"，而是结合你填写的课程、目标和时间，展示不同取舍下的成本与风险，由你判断。</p>
+
+    <div class="card" style="margin-bottom:18px;">
+      <div class="btn-row"><button class="btn" style="background:var(--plan);" id="matchPlanBtn">生成 AI 个性化建议</button></div>
+    </div>
+
+    <div class="grid cols-3" id="planCards"></div>
+
+    <div id="aiAdviceResult" style="display:none;"></div>
 
     <div class="caution">
-      <div>ⓘ</div>
-      <div><b>这不是能力高低的绝对判断</b>只是基于有限数据的可解释性观察。数据不足时，不必强行得出结论。</div>
+      <div>⚠️</div>
+      <div><b>关于"选不上"的预案</b>抢课失败很常见。建议为每个首选课程都准备一个替代方案，并提前确认替代课程与其他课程是否存在项目周期或考试周冲突。</div>
     </div>
   </section>
 
 </div>
 
+
 <!-- 状态与工具函数，其余模块脚本都依赖这里 -->
 <script src="js/state.js"></script>
-<!-- 顶部 Tab 切换 -->
+<!-- 快速跳转导航（点击滚动到对应区块） -->
 <script src="js/tabs.js"></script>
 <!-- 模块一：绩点基础档案（表单、课程列表渲染） -->
 <script src="js/profile.js"></script>

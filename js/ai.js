@@ -33,3 +33,30 @@ async function getAIAdvice(payload) {
   const data = await res.json();
   return data.advice;
 }
+
+/**
+ * 把一张图片（课程大纲/评分规则截图）发给后端，换回识别出的评分项数组。
+ * @param {string} imageDataUrl - canvas.toDataURL() 得到的 "data:image/jpeg;base64,...." 字符串
+ * @returns {Promise<Array<{name:string, weight:number, score:number|null}>>}
+ */
+async function getGradingItemsFromImage(imageDataUrl) {
+  const res = await fetch('/api/parse-grading-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64: imageDataUrl })
+  });
+
+  if (!res.ok) {
+    let message = '识别失败，请稍后重试';
+    try {
+      const err = await res.json();
+      if (err.error) message = err.error;
+    } catch (e) {
+      /* 后端没返回 JSON，就用默认提示 */
+    }
+    throw new Error(message);
+  }
+
+  const data = await res.json();
+  return Array.isArray(data.items) ? data.items : [];
+}
