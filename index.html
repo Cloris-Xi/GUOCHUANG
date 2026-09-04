@@ -17,6 +17,20 @@
     <p>从上到下走一遍：先填你的课程和情况，往下滚就能看到模拟结果、优先级排序和 AI 给的个性化建议。</p>
   </div>
 
+  <!-- AUTH BAR -->
+  <div class="auth-bar" id="authBar">
+    <span id="authStatus">检查登录状态…</span>
+    <div class="btn-row" id="authActions" style="margin-top:0;"></div>
+  </div>
+
+  <!-- AUTH MODAL（登录/注册/忘记密码/重置密码 共用一个弹窗，切换内容） -->
+  <div class="modal-overlay" id="authModal" style="display:none;">
+    <div class="modal-box">
+      <button class="modal-close" id="authModalClose">×</button>
+      <div id="authModalBody"></div>
+    </div>
+  </div>
+
   <!-- QUICK JUMP NAV -->
   <div class="tabs" id="tabs">
     <button class="tab" data-target="sec-profile" data-color="var(--profile)" style="border-color:var(--profile); color:var(--profile);"><span class="dot" style="background:var(--profile)"></span>① 绩点档案</button>
@@ -336,5 +350,11 @@
 <script src="js/ai.js"></script>
 <!-- 页面初始化，必须放在所有模块脚本之后 -->
 <script src="js/main.js"></script>
+<!-- 数据持久化：收集/恢复整页状态，供登录后保存/加载使用 -->
+<script src="js/persistence.js"></script>
+<!-- 登录/注册/忘记密码/重置密码，必须放在最后——它加载完会立刻检查登录状态，
+     如果已登录会自动加载保存过的数据并回填到页面各处，需要前面所有模块的
+     函数（addHistoryRow、renderCourses 等）都已经定义好 -->
+<script src="js/auth.js"></script>
 </body>
 </html>

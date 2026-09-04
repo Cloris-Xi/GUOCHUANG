@@ -19,20 +19,70 @@
 │   │                        HTML 显示在这一步，但逻辑仍在 profile.js 里（见上）
 │   ├── matrix.js          步骤05：学习方案（AI 生成：优先级矩阵+目标可达性分析+四种方案）
 │   ├── ai.js              浏览器端调用各 /api/* 接口的封装
-│   └── main.js            页面初始化入口，必须最后加载
+│   ├── persistence.js     收集/恢复整页数据（collectAppState / applyAppState），供登录后保存/加载
+│   ├── auth.js            登录/注册/忘记密码/重置密码的前端交互，页面加载时自动检查登录状态
+│   └── main.js            页面初始化入口
+├── lib/                  （不在 api/ 目录下，Vercel 不会把这里的文件当成路由，纯共享代码）
+│   ├── redis.js           Upstash Redis REST API 的最小封装（get/set/del）
+│   ├── auth.js            密码哈希、session 签发与校验、cookie 读写
+│   └── email.js           用 Resend 发"忘记密码"邮件
 ├── api/
 │   ├── course-advice.js         Vercel Serverless Function：生成个性化选课建议，Redis 做缓存
 │   ├── study-plan.js            Vercel Serverless Function：生成学习方案（优先级矩阵+可达性分析+四种方案），Redis 做缓存
 │   ├── parse-schedule-image.js  Vercel Serverless Function：识别选课系统截图里的课程/学分/时间
 │   ├── ability-diagnosis.js     Vercel Serverless Function：生成能力与方向诊断，Redis 做缓存
 │   ├── parse-grading-image.js   Vercel Serverless Function：识别截图里的评分构成
-│   └── parse-transcript-image.js Vercel Serverless Function：识别截图里的历史课程成绩
-├── package.json
+│   ├── parse-transcript-image.js Vercel Serverless Function：识别截图里的历史课程成绩
+│   ├── user-data.js             GET/POST，登录后保存/读取整页数据（存 Redis，每次覆盖式保存）
+│   └── auth/
+│       ├── register.js          注册（bcrypt 哈希密码，自动登录）
+│       ├── login.js             登录
+│       ├── logout.js            登出（清 cookie）
+│       ├── me.js                查询当前登录状态
+│       ├── forgot-password.js   发送重置密码邮件（Resend）
+│       └── reset-password.js    用邮件里的一次性 token 换新密码
+├── package.json          （新增 bcryptjs 依赖，Vercel 部署时会自动 npm install）
 ├── .gitignore
 └── README.md
 ```
 
-## 页面流程（5 步，从上到下）
+## 登录功能需要额外配置的环境变量
+
+除了之前已经配置的 `ANTHROPIC_API_KEY` 和 `UPSTASH_REDIS_REST_URL` /
+`UPSTASH_REDIS_REST_TOKEN`（登录功能直接复用同一个 Redis，账号数据和
+AI 缓存数据用不同的 key 前缀区分，不会冲突），还需要新增两个：
+
+| Key | 必需 | 说明 |
+|---|---|---|
+| `SESSION_SECRET` | 是 | 随便一串足够长、随机的字符串（比如用密码生成器生成 32 位），用来给登录状态的 cookie 签名。泄露了等于所有人的登录状态都能被伪造，只放在 Vercel 环境变量里，不要写进代码 |
+| `RESEND_API_KEY` | 是（要用忘记密码功能就必须配） | 去 [resend.com](https://resend.com) 注册账号，在控制台申请一个 API Key |
+| `RESEND_FROM` | 否 | 发件邮箱地址，不填默认用 Resend 提供的测试地址 `onboarding@resend.dev`（不需要自己验证域名就能发，但收件人邮箱里会看到 Resend 的痕迹）。正式使用建议在 Resend 后台验证自己的域名后，把这个改成你自己的邮箱，比如 `no-reply@yourdomain.com` |
+
+添加方式和之前一样：Vercel 项目 → Settings → Environment Variables →
+Add New，Environment 记得勾 Production，加完要重新 Deploy 一次才生效。
+
+## 账号数据存在哪里、怎么组织的
+
+- `user:<email>` —— 存 `{passwordHash, createdAt}`，密码永远只存 bcrypt
+  哈希后的结果，不会有任何地方存明文密码。
+- `userdata:<email>` —— 存整页数据的 JSON（本学期课程、历史均绩、
+  个人目标、候选课程、能力自评、时间与优先目标偏好），点"保存我的
+  数据"按钮时整份覆盖式保存，不是增量更新。
+- `reset:<token>` —— 忘记密码时生成的一次性令牌，30 分钟过期，
+  用一次就删，防止重放。
+
+登录状态是一个签名 cookie（`gpa_session`），没有单独在 Redis 里存
+session 记录——校验的时候用 `SESSION_SECRET` 重新算一遍签名对比，
+省一次 Redis 读。cookie 有效期 30 天，登出就是把它清空。
+
+**这是一个足够用的最小实现，不是银行级别的安全方案**：没做登录失败
+次数限制（可能被暴力破解密码）、没做邮箱验证（注册时不会发确认邮件，
+任何人可以用任意邮箱注册，包括别人的邮箱——只是他们收不到那个邮箱的
+邮件而已，不影响你自己账号的安全）。如果之后要接入正式的多用户产品，
+建议换成 Auth0 / Clerk / NextAuth 这类专门的认证服务，而不是继续在
+这个自建方案上加功能。
+
+
 
 1. **绩点档案** —— 内部分三小块：
    1. 绩点制度（换算制式）
@@ -152,16 +202,48 @@ Serverless Function，所以在 GitHub Pages 上"生成 AI 个性化建议"这�
 "10:00-11:40"）而不是"第几节"，模型会尽量转换成最接近的节次，
 转换不准的话需要手动改一下"上课时间"这一栏。
 
+## 登录与数据保存
+
+页面顶部有个登录栏。没登录时显示"登录 / 注册"两个按钮，登录后显示
+当前邮箱、"保存我的数据"和"退出登录"。
+
+**保存/恢复的范围**：本学期课程、历史均绩、个人目标（两个目标绩点+
+其他目标要求）、候选课程、能力自评、时间与优先目标偏好——也就是
+"绩点档案""能力诊断""个性化选课建议"三步里所有的输入内容。AI 生成
+出来的结果（能力诊断、选课建议、学习方案）不会被保存，因为那些本来
+就是基于当前数据现算的，重新点一下按钮就能再生成一份。
+
+**怎么用**：
+1. 右上角点"注册"，填邮箱和密码（至少 8 位）创建账号，会自动登录
+2. 正常填页面上的各项内容
+3. 填完点"保存我的数据"，存到服务器
+4. 下次打开页面（同一账号登录后）会自动读回来，所有输入框都会
+   重新填上之前保存的内容
+
+**忘记密码**：登录弹窗里点"忘记密码了"，输入邮箱，收一封带重置链接
+的邮件（30 分钟内有效，用一次就失效），点链接会自动弹出"设置新密码"
+的表单。
+
+**没有做自动保存**——每次改动就存一次请求太频繁，改成用户自己点
+"保存我的数据"的时候才存一整份，逻辑更简单也更可控。
+
 ## 加载顺序
 
 `index.html` 里的 `<script>` 标签顺序不能随便调换：
 
-`state.js → tabs.js → profile.js → history.js → simulator.js → plan.js → matrix.js → ability.js → ai.js → main.js`
+`state.js → tabs.js → profile.js → history.js → candidates.js → simulator.js → plan.js → matrix.js → ability.js → ai.js → main.js → persistence.js → auth.js`
+
+`persistence.js` 和 `auth.js` 必须放在所有功能模块之后——`auth.js`
+一加载就会自动检查登录状态，如果已登录会立刻尝试加载保存过的数据并
+回填到页面各处（`addHistoryRow`、`addCandidateRow`、`renderCourses`
+这些函数都必须已经定义好）。
 
 （脚本文件名和页面步骤编号不是一一对应的——`profile.js` 对应步骤01，
-`history.js`/`ability.js` 一起对应步骤02，`plan.js` 对应步骤03，
-`simulator.js` 对应步骤04，`matrix.js` 对应步骤05。脚本按依赖关系
-加载，跟页面上步骤的展示顺序是两回事。）
+`ability.js` 对应步骤02，`plan.js`/`candidates.js` 对应步骤03，
+`simulator.js` 对应步骤04，`matrix.js` 对应步骤05，`history.js` 虽然
+文件名像独立步骤，其实对应的是步骤01里的"历史均绩"子模块。`persistence.js`
+和 `auth.js` 不对应任何一个步骤，是贯穿全页面的登录/保存功能。脚本按
+依赖关系加载，跟页面上步骤的展示顺序是两回事。）
 
 原因：后面的文件里的函数会用到前面文件定义的全局变量（如 `courses`、`simAssumed`）
 和函数（如 `scoreToGpa`），本项目没有用打包工具，靠加载顺序保证依赖关系。

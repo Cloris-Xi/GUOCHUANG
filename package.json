@@ -2,5 +2,8 @@
   "name": "gpa-planner",
   "version": "1.0.0",
   "private": true,
-  "description": "面向高校学生的个性化学业决策与绩点模拟平台"
+  "description": "面向高校学生的个性化学业决策与绩点模拟平台",
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  }
 }
