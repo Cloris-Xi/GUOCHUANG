@@ -47,6 +47,7 @@ document.getElementById('diagnoseAbilityBtn').onclick = async ()=>{
 
   const payload = {
     historyCourses: getHistoryCoursesFromDOM(),
+    manualCurrentGpa: document.getElementById('manualCurrentGpa').value || null,
     abilitySelfRating: getAbilitySelfRatingFromDOM()
   };
 

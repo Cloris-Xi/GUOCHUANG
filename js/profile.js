@@ -50,7 +50,54 @@ document.getElementById('demoBtn').onclick = ()=>{
   renderCourses();
 };
 
-document.getElementById('gpaScale').onchange = ()=>{ renderCourses(); renderSimBody(); renderHistoryGpaSummary(); };
+document.getElementById('gpaScale').onchange = ()=>{
+  document.getElementById('customScalePanel').style.display = document.getElementById('gpaScale').value === 'custom' ? 'block' : 'none';
+  renderCourses(); renderSimBody(); renderHistoryGpaSummary();
+};
+
+/* ---------------- 自定义绩点换算表 ---------------- */
+function addCustomScaleRow(min='', point=''){
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  row.style.gridTemplateColumns = '1fr 1fr 30px';
+  row.innerHTML = `
+    <input type="number" class="cs-min" placeholder="多少分以上（如 90）" value="${escapeHtml(min)}" min="0" max="100">
+    <input type="number" class="cs-point" placeholder="对应绩点（如 4.0）" value="${escapeHtml(point)}" step="0.1" min="0">
+    <button class="remove-x" title="删除">×</button>`;
+  row.querySelector('.remove-x').onclick = ()=>{ row.remove(); rebuildCustomScaleTable(); };
+  row.querySelectorAll('input').forEach(inp=> inp.addEventListener('input', rebuildCustomScaleTable));
+  document.getElementById('customScaleRows').appendChild(row);
+}
+document.getElementById('addCustomScaleRowBtn').onclick = ()=> { addCustomScaleRow(); rebuildCustomScaleTable(); };
+
+/* 从 DOM 读出自定义换算表，按分数下限从高到低排序后存进全局的 customScaleTable，
+   scoreToGpa() 靠"从高到低第一个满足条件的挡位"来判断，顺序不对会算错。
+   这个函数只负责重建 customScaleTable 本身，不触发任何重绘——初始化默认行
+   的时候会用到它，那时候 simulator.js/matrix.js 还没加载，不能提前调用
+   它们的渲染函数。 */
+function computeCustomScaleTableFromDOM(){
+  const rows = [...document.querySelectorAll('#customScaleRows .item-row')];
+  const table = rows.map(r=>[
+    parseFloat(r.querySelector('.cs-min').value),
+    parseFloat(r.querySelector('.cs-point').value)
+  ]).filter(([min,pt])=> !isNaN(min) && !isNaN(pt));
+  table.sort((a,b)=> b[0]-a[0]);
+  if(!table.length || table[table.length-1][0] > 0){
+    table.push([0,0]); // 兜底，保证任何分数都有对应绩点，没有的话默认最低给0
+  }
+  customScaleTable = table;
+}
+
+/* 用户实际编辑自定义换算表时用这个：重建表 + 触发相关模块重新渲染。 */
+function rebuildCustomScaleTable(){
+  computeCustomScaleTableFromDOM();
+  renderCourses(); renderSimBody(); renderHistoryGpaSummary();
+}
+addCustomScaleRow(90, 4.0);
+addCustomScaleRow(80, 3.0);
+addCustomScaleRow(70, 2.0);
+addCustomScaleRow(60, 1.0);
+computeCustomScaleTableFromDOM();
 document.getElementById('targetGpa').oninput = ()=>{ renderCourses(); };
 
 /* ---------------- 从截图导入评分规则（AI 视觉识别） ---------------- */

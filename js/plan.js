@@ -67,6 +67,7 @@ document.getElementById('matchPlanBtn').onclick = async ()=>{
     candidateConflicts,
     targetGpa,
     finalTargetGpa,
+    manualCurrentGpa: document.getElementById('manualCurrentGpa').value || null,
     gpaScale: document.getElementById('gpaScale').value,
     weeklyHours: (()=>{ const h = parseFloat(document.getElementById('weeklyHours').value); return isNaN(h) ? null : h; })(),
     priorityGoal: document.getElementById('priorityGoal').value,

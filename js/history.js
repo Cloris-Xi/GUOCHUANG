@@ -34,15 +34,20 @@ function getHistoryCoursesFromDOM(){
 }
 
 /* "历史均绩"这一块名字就叫这个，所以实际算一个学分加权的历史平均绩点出来，
-   而不是只把历史课程列出来。用的是当前"绩点制度"选的换算制式。 */
+   而不是只把历史课程列出来。用的是当前"绩点制度"选的换算制式。如果学生
+   在上面直接手动填了"目前绩点"，优先展示手动填的那个（更准，因为教务
+   系统算的可能包含了这里没录全的课程），逐门算出来的平均分退居参考。 */
 function renderHistoryGpaSummary(){
   const box = document.getElementById('historyGpaSummary');
   if(!box) return;
   const items = getHistoryCoursesFromDOM().filter(it => it.credit && it.score !== null);
-  if(!items.length){
+  const manualVal = document.getElementById('manualCurrentGpa').value;
+
+  if(!items.length && !manualVal){
     box.innerHTML = '';
     return;
   }
+
   const scale = document.getElementById('gpaScale').value;
   let creditSum = 0, gpaSum = 0;
   items.forEach(it=>{
@@ -50,12 +55,21 @@ function renderHistoryGpaSummary(){
     gpaSum += scoreToGpa(it.score, scale) * it.credit;
   });
   const avgGpa = creditSum ? (gpaSum / creditSum) : 0;
-  box.innerHTML = `
-    <div class="stat" style="background:var(--profile-soft);"><div class="v" style="color:var(--profile);">${avgGpa.toFixed(2)}</div><div class="l">历史平均绩点（${scale}制）</div></div>
-    <div class="stat" style="background:var(--sim-soft);"><div class="v" style="color:var(--sim);">${creditSum}</div><div class="l">已录入学分</div></div>
-    <div class="stat" style="background:var(--ability-soft);"><div class="v" style="color:var(--ability);">${items.length}</div><div class="l">已录入课程数</div></div>
-  `;
+
+  let html = '';
+  if(manualVal){
+    html += `<div class="stat" style="background:var(--profile-soft);"><div class="v" style="color:var(--profile);">${escapeHtml(manualVal)}</div><div class="l">目前绩点（你手动填的，AI 会优先用这个）</div></div>`;
+  }
+  if(items.length){
+    html += `
+      <div class="stat" style="background:${manualVal?'var(--sim-soft)':'var(--profile-soft)'};"><div class="v" style="color:var(--sim);">${avgGpa.toFixed(2)}</div><div class="l">按下面课程逐门算出的平均绩点（${scale}制）</div></div>
+      <div class="stat" style="background:var(--ability-soft);"><div class="v" style="color:var(--ability);">${creditSum}</div><div class="l">已录入学分</div></div>
+      <div class="stat" style="background:var(--matrix-soft);"><div class="v" style="color:var(--matrix);">${items.length}</div><div class="l">已录入课程数</div></div>
+    `;
+  }
+  box.innerHTML = html;
 }
+document.getElementById('manualCurrentGpa').addEventListener('input', renderHistoryGpaSummary);
 
 /* ---------------- 拖拽 / 点击导入成绩单截图 ---------------- */
 const historyDropzone = document.getElementById('historyDropzone');

@@ -11,10 +11,12 @@ function collectAppState(){
   return {
     courses,
     gpaScale: document.getElementById('gpaScale').value,
+    customScaleTable,
     targetGpa: document.getElementById('targetGpa').value,
     finalTargetGpa: document.getElementById('finalTargetGpa').value,
     otherGoals,
     otherGoalsText: document.getElementById('otherGoalsText').value,
+    manualCurrentGpa: document.getElementById('manualCurrentGpa').value,
     historyCourses: typeof getHistoryCoursesFromDOM === 'function' ? getHistoryCoursesFromDOM() : [],
     abilitySelfRating: typeof getAbilitySelfRatingFromDOM === 'function' ? getAbilitySelfRatingFromDOM() : {},
     candidateCourses: typeof getCandidateCoursesFromDOM === 'function' ? getCandidateCoursesFromDOM() : [],
@@ -32,9 +34,19 @@ function applyAppState(data){
     courseIdSeq = courses.reduce((max,c)=> Math.max(max, c.id||0), 0) + 1;
   }
   if(data.gpaScale) document.getElementById('gpaScale').value = data.gpaScale;
+  document.getElementById('customScalePanel').style.display = data.gpaScale === 'custom' ? 'block' : 'none';
+  if(Array.isArray(data.customScaleTable) && data.customScaleTable.length && typeof addCustomScaleRow === 'function'){
+    document.getElementById('customScaleRows').innerHTML = '';
+    data.customScaleTable.forEach(([min,pt])=>{
+      if(min===0 && pt===0) return; // 兜底档不需要显示成一行，rebuild 时会自动补
+      addCustomScaleRow(min, pt);
+    });
+    if(typeof computeCustomScaleTableFromDOM === 'function') computeCustomScaleTableFromDOM();
+  }
   if(data.targetGpa !== undefined) document.getElementById('targetGpa').value = data.targetGpa;
   if(data.finalTargetGpa !== undefined) document.getElementById('finalTargetGpa').value = data.finalTargetGpa;
   if(data.otherGoalsText !== undefined) document.getElementById('otherGoalsText').value = data.otherGoalsText;
+  if(data.manualCurrentGpa !== undefined) document.getElementById('manualCurrentGpa').value = data.manualCurrentGpa;
   if(Array.isArray(data.otherGoals)){
     document.querySelectorAll('.goal-check').forEach(cb=>{
       cb.checked = data.otherGoals.includes(cb.value);
@@ -44,8 +56,8 @@ function applyAppState(data){
   if(Array.isArray(data.historyCourses) && typeof addHistoryRow === 'function'){
     document.getElementById('historyRows').innerHTML = '';
     data.historyCourses.forEach(it => addHistoryRow(it.name||'', it.credit ?? '', it.score ?? '', it.tag||''));
-    if(typeof renderHistoryGpaSummary === 'function') renderHistoryGpaSummary();
   }
+  if(typeof renderHistoryGpaSummary === 'function') renderHistoryGpaSummary();
 
   if(data.abilitySelfRating && typeof abilityDims !== 'undefined'){
     abilityDims.forEach(d=>{
