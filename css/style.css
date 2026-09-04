@@ -96,6 +96,9 @@
     z-index:-1;
     transform:rotate(-0.6deg);
   }
+  .page-head-tagline{
+    font-size:15px; color:var(--ink-soft); margin:0 0 16px;
+  }
   .guide-line{
     display:flex; flex-wrap:wrap; align-items:center; gap:8px;
     font-size:14.5px; color:var(--ink-soft);
