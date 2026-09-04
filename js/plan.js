@@ -40,6 +40,10 @@ document.getElementById('matchPlanBtn').onclick = async ()=>{
     resultBox.innerHTML = `<div class="caution"><div>⚠️</div><div><b>先填两个必填的目标绩点</b>回到"绩点档案 → 个人目标"，把"本学期目标绩点"和"毕业/最终目标绩点"都填上，AI 需要这两个数字才能判断该怎么取舍。</div></div>`;
     return;
   }
+  if(!isCurrentGpaProvided()){
+    resultBox.innerHTML = `<div class="caution"><div>⚠️</div><div><b>先填"目前绩点"</b>回到"绩点档案 → 历史均绩"，填一下目前绩点，如果你是大一新生还没有绩点，勾选那个选项就行。</div></div>`;
+    return;
+  }
 
   const originalText = btn.textContent;
   btn.disabled = true;

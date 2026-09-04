@@ -40,6 +40,11 @@ document.getElementById('diagnoseAbilityBtn').onclick = async ()=>{
   const resultBox = document.getElementById('abilityDiagnosisResult');
   resultBox.style.display = 'block';
 
+  if(!isCurrentGpaProvided()){
+    resultBox.innerHTML = `<div class="caution"><div>⚠️</div><div><b>先填"目前绩点"</b>回到"绩点档案 → 历史均绩"，填一下目前绩点，如果你是大一新生还没有绩点，勾选那个选项就行。</div></div>`;
+    return;
+  }
+
   const originalText = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'AI 正在分析…';

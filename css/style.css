@@ -73,8 +73,47 @@
   }
   .page-head-main{max-width:60ch;}
   .page-head-side{
-    /* 预留区域，留给用户自己放内容，故意不加边框/背景，避免在填内容前显得突兀 */
+    display:flex; align-items:center; justify-content:center;
     min-height:1px;
+  }
+
+  /* ---------- 标题旁边的小机器人 ---------- */
+  .robot-mascot{width:100%; max-width:180px; overflow:visible;}
+  .robot-float{
+    transform-origin:center;
+    animation:robot-bob 3.2s ease-in-out infinite;
+  }
+  @keyframes robot-bob{
+    0%, 100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-9px) rotate(-1.5deg);}
+  }
+  .robot-antenna{
+    transform-origin:100px 40px;
+    animation:robot-antenna-wiggle 3.2s ease-in-out infinite;
+  }
+  @keyframes robot-antenna-wiggle{
+    0%, 100%{transform:rotate(0deg);}
+    50%{transform:rotate(6deg);}
+  }
+  .robot-eye{animation:robot-blink 4.5s ease-in-out infinite;}
+  .robot-eye-r{animation-delay:.05s;}
+  @keyframes robot-blink{
+    0%, 92%, 100%{transform:scaleY(1);}
+    96%{transform:scaleY(0.12);}
+  }
+  .robot-eye{transform-origin:center;}
+  .robot-arm-l{
+    transform-origin:40px 70px;
+    animation:robot-wave 3.2s ease-in-out infinite;
+  }
+  @keyframes robot-wave{
+    0%, 100%{transform:rotate(0deg);}
+    25%{transform:rotate(-18deg);}
+    50%{transform:rotate(6deg);}
+    75%{transform:rotate(-10deg);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .robot-float, .robot-antenna, .robot-eye, .robot-arm-l{animation:none;}
   }
   .page-head h1{
     font-family:"Manrope","Noto Sans SC",sans-serif;

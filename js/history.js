@@ -71,6 +71,22 @@ function renderHistoryGpaSummary(){
 }
 document.getElementById('manualCurrentGpa').addEventListener('input', renderHistoryGpaSummary);
 
+/* 勾选"大一新生"就不强制要求目前绩点了，同时把输入框禁用+清空，
+   避免出现"勾了新生但又留着一个旧数字"的歧义状态。 */
+document.getElementById('isFreshman').addEventListener('change', e=>{
+  const input = document.getElementById('manualCurrentGpa');
+  input.disabled = e.target.checked;
+  if(e.target.checked) input.value = '';
+  renderHistoryGpaSummary();
+});
+
+/* 供其他模块（plan.js/matrix.js/ability.js）校验用：目前绩点是否已经
+   合法填写，或者勾了"大一新生"可以豁免。 */
+function isCurrentGpaProvided(){
+  if(document.getElementById('isFreshman').checked) return true;
+  return document.getElementById('manualCurrentGpa').value !== '';
+}
+
 /* ---------------- 拖拽 / 点击导入成绩单截图 ---------------- */
 const historyDropzone = document.getElementById('historyDropzone');
 const historyImageInput = document.getElementById('historyImageInput');

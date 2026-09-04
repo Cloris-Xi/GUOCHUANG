@@ -24,7 +24,27 @@
         <span class="step"><span class="dot" style="background:var(--matrix);">3</span>照学习方案安排时间</span>
       </div>
     </div>
-    <div class="page-head-side" id="pageHeadSide"><!-- 预留区域，给你自己放内容 --></div>
+    <div class="page-head-side" id="pageHeadSide">
+      <svg class="robot-mascot" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="一个漂浮打招呼的卡通机器人">
+        <g class="robot-float">
+          <line x1="100" y1="18" x2="100" y2="40" stroke="var(--profile)" stroke-width="4" stroke-linecap="round" class="robot-antenna"/>
+          <circle cx="100" cy="14" r="7" fill="var(--plan)"/>
+          <rect x="40" y="40" width="120" height="95" rx="26" fill="var(--card)" stroke="var(--profile)" stroke-width="4"/>
+          <circle cx="76" cy="82" r="10" fill="var(--profile)" class="robot-eye robot-eye-l"/>
+          <circle cx="124" cy="82" r="10" fill="var(--profile)" class="robot-eye robot-eye-r"/>
+          <circle cx="60" cy="102" r="8" fill="var(--ability-soft)"/>
+          <circle cx="140" cy="102" r="8" fill="var(--ability-soft)"/>
+          <path d="M82 108 Q100 120 118 108" stroke="var(--profile)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <line x1="40" y1="70" x2="18" y2="55" stroke="var(--sim)" stroke-width="5" stroke-linecap="round" class="robot-arm-l"/>
+          <circle cx="18" cy="55" r="7" fill="var(--sim)" class="robot-arm-l"/>
+          <line x1="160" y1="70" x2="182" y2="90" stroke="var(--matrix)" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="182" cy="90" r="7" fill="var(--matrix)"/>
+          <rect x="60" y="145" width="80" height="42" rx="14" fill="var(--card)" stroke="var(--profile)" stroke-width="4"/>
+          <rect x="76" y="160" width="16" height="12" rx="4" fill="var(--sim)"/>
+          <rect x="108" y="160" width="16" height="12" rx="4" fill="var(--plan)"/>
+        </g>
+      </svg>
+    </div>
   </div>
 
   <!-- AUTH BAR -->
@@ -88,9 +108,13 @@
       <p style="font-size:12.5px; color:var(--ink-soft); margin:-4px 0 14px;">查看/修改过往学期的成绩，也可以拖拽新的成绩单截图进来追加。<b>大一新生还没有历史成绩，跳过这一块也完全可以。</b></p>
 
       <div class="field" style="max-width:340px; margin-bottom:16px;">
-        <label>目前绩点（手动填写，可选）</label>
+        <label>目前绩点<span class="req-star">*必填</span></label>
         <input type="number" id="manualCurrentGpa" placeholder="例如 3.62" step="0.01" min="0" max="5">
-        <p style="font-size:12px; color:var(--ink-soft); margin:6px 0 0;">如果你已经在教务系统查到了自己的累计绩点，直接填这里更省事，不用逐门课去凑。填了之后 AI 生成建议时会优先参考这个数字。</p>
+        <p style="font-size:12px; color:var(--ink-soft); margin:6px 0 8px;">如果你已经在教务系统查到了自己的累计绩点，直接填这里最省事，不用逐门课去凑。AI 生成建议时会优先参考这个数字。</p>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:var(--ink); margin-bottom:0;">
+          <input type="checkbox" id="isFreshman" style="width:15px; height:15px; accent-color:var(--profile);">
+          我是大一新生，还没有绩点（可以跳过这一项）
+        </label>
       </div>
 
       <div class="dropzone" id="historyDropzone">
