@@ -26,7 +26,7 @@
 │   ├── redis.js           Upstash Redis REST API 的最小封装（get/set/del）
 │   ├── auth.js            密码哈希、session 签发与校验、cookie 读写
 │   └── email.js           用 Resend 发"忘记密码"邮件
-├── api/
+├── api/                  （一共 8 个 Serverless Function，Vercel Hobby 计划上限 12 个，留了余量）
 │   ├── course-advice.js         Vercel Serverless Function：生成个性化选课建议，Redis 做缓存
 │   ├── study-plan.js            Vercel Serverless Function：生成学习方案（优先级矩阵+可达性分析+四种方案），Redis 做缓存
 │   ├── parse-schedule-image.js  Vercel Serverless Function：识别选课系统截图里的课程/学分/时间
@@ -35,12 +35,11 @@
 │   ├── parse-transcript-image.js Vercel Serverless Function：识别截图里的历史课程成绩
 │   ├── user-data.js             GET/POST，登录后保存/读取整页数据（存 Redis，每次覆盖式保存）
 │   └── auth/
-│       ├── register.js          注册（bcrypt 哈希密码，自动登录）
-│       ├── login.js             登录
-│       ├── logout.js            登出（清 cookie）
-│       ├── me.js                查询当前登录状态
-│       ├── forgot-password.js   发送重置密码邮件（Resend）
-│       └── reset-password.js    用邮件里的一次性 token 换新密码
+│       └── [action].js          动态路由，一个文件顶 register/login/logout/me/
+│                                  forgot-password/reset-password 六个动作，靠
+│                                  req.query.action 分发（原来是 6 个独立文件，
+│                                  会导致总数 13 个超过 Hobby 计划的 12 个上限，
+│                                  合并后前端请求路径不用改，见下面的说明）
 ├── package.json          （新增 bcryptjs 依赖，Vercel 部署时会自动 npm install）
 ├── .gitignore
 └── README.md
@@ -149,7 +148,22 @@ Serverless Function，所以在 GitHub Pages 上"生成 AI 个性化建议"这�
    截图里的 `Other` 就行，Vercel 会自动识别 `api/` 目录下的文件，
    两个接口共用同一个 `ANTHROPIC_API_KEY`，不需要额外配置。
 
-## 从截图导入评分规则
+## 排障：部署失败但 Build 日志看起来是成功的
+
+如果 Deployments 列表里显示失败（红叉），但点进去看 Build 日志，
+最后几行是 `Build Completed` / `Deploying outputs...`，没有明显报错，
+大概率是撞到了 **Vercel Hobby（免费）计划每次部署最多 12 个
+Serverless Function 的上限**——这种超限失败发生在 Build 完成之后的
+部署阶段，日志里经常看不到直白的报错信息，容易误以为是别的问题。
+
+`api/` 目录下每个 `.js` 文件（包括子文件夹里的）都会被算成一个独立
+的 Function，数一数当前项目下所有 `.js` 文件的数量，如果接近或超过
+12，就要考虑合并——`api/auth/[action].js` 这个动态路由文件就是这么
+来的：原来 6 个独立的登录相关接口合并成了一个，前端请求路径完全不用
+改（`/api/auth/register`、`/api/auth/login` 这些路径照常能用，
+Vercel 会把 `[action]` 解析成 `register`、`login` 传给同一个文件）。
+
+
 
 "绩点档案"模块里，评分构成表格上方有个"📷 从截图导入评分规则"按钮：
 
